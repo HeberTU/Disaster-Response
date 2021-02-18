@@ -2,7 +2,36 @@ import sys
 import pandas as pd
 from sqlalchemy import create_engine
 
-def load_data(messages_filepath, categories_filepath):
+def load_data(messages_filepath: str, categories_filepath: str)-> pd.DataFrame:
+    """"
+    Loads and merges the messages and categories files
+
+    parameters
+    -----------
+    messages_filepath : str
+    String path to load messages file
+
+    categories_filepath : str
+    String path to load categories file
+
+    returns
+    -------
+    df: pd.DataFrame
+    DataFrame containing the messages and categories files merged by id.
+    columns:
+        + id: int
+            message identifier
+        + message: obj
+            translated message
+        + original:
+            originla message
+        + genre:
+            message genre
+        + categories:
+            message category as concatenated dummy variable.
+
+    """
+
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = messages.merge(
@@ -14,8 +43,70 @@ def load_data(messages_filepath, categories_filepath):
 
 
 
-def clean_data(df):
-    pass
+def clean_data(df: pd.DataFrame)->pd.DataFrame:
+    """"
+    cleans the merged version of messages and categories files
+
+    parameters
+    -----------
+    df: pd.DataFrame
+    DataFrame containing the messages and categories files merged by id.
+    columns:
+        + id: int
+            message identifier
+        + message: obj
+            translated message
+        + original:
+            originla message
+        + genre:
+            message genre
+        + categories:
+            message category as concatenated dummy variable.
+
+    returns
+    -------
+    df: pd.DataFrame
+    DataFrame containing:
+        1. Dummified version of Categories columns
+        2. No duplicate records
+
+
+
+    """
+    # create a dataframe of the 36 individual category columns
+    categories = df['categories'].str.split(pat = ";", expand = True)
+
+    # select the first row of the categories dataframe to extract a list of new column names for categories.
+    row = categories.loc[0]
+    category_colnames = row.str.split("-").str[0]
+    categories.columns = category_colnames
+
+    for column in categories:
+        # set each value to be the last character of the string
+        categories[column] = categories[column].str.replace(column + "-", "")
+
+        # convert column from string to numeric
+        categories[column] = categories[column].astype(int)
+
+    # drop the original categories column from `df`
+    df.drop(
+        labels='categories',
+        axis=1,
+        inplace=True)
+
+    # concatenate the original dataframe with the new `categories` dataframe
+    df = pd.concat(
+        objs=[df, categories],
+        axis=1)
+
+    # drop duplicates
+    labels = df.columns.values[1:]
+    df.drop_duplicates(
+        subset=labels,
+        keep='first',
+        inplace=True)
+
+    return df
 
 
 def save_data(df, database_filename):
