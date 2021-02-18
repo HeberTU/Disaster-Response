@@ -2,7 +2,8 @@ import sys
 import pandas as pd
 from sqlalchemy import create_engine
 
-def load_data(messages_filepath: str, categories_filepath: str)-> pd.DataFrame:
+
+def load_data(messages_filepath: str, categories_filepath: str) -> pd.DataFrame:
     """"
     Loads and merges the messages and categories files
 
@@ -35,33 +36,31 @@ def load_data(messages_filepath: str, categories_filepath: str)-> pd.DataFrame:
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = messages.merge(
-            how="left",
-            right=categories,
-            on=['id'])
+        how="left",
+        right=categories,
+        on=['id'])
 
     return df
 
 
-
-def clean_data(df: pd.DataFrame)->pd.DataFrame:
+def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     """"
     cleans the merged version of messages and categories files
 
     parameters
     -----------
     df: pd.DataFrame
-    DataFrame containing the messages and categories files merged by id.
-    columns:
-        + id: int
-            message identifier
-        + message: obj
-            translated message
-        + original:
-            originla message
-        + genre:
-            message genre
-        + categories:
-            message category as concatenated dummy variable.
+    DataFrame containing the messages and categories files merged by id. columns:
+            + id: int
+                message identifier
+            + message: obj
+                translated message
+            + original:
+                originla message
+            + genre:
+                message genre
+            + categories:
+                message category as concatenated dummy variable.
 
     returns
     -------
@@ -70,11 +69,9 @@ def clean_data(df: pd.DataFrame)->pd.DataFrame:
         1. Dummified version of Categories columns
         2. No duplicate records
 
-
-
     """
     # create a dataframe of the 36 individual category columns
-    categories = df['categories'].str.split(pat = ";", expand = True)
+    categories = df['categories'].str.split(pat=";", expand=True)
 
     # select the first row of the categories dataframe to extract a list of new column names for categories.
     row = categories.loc[0]
@@ -110,7 +107,26 @@ def clean_data(df: pd.DataFrame)->pd.DataFrame:
 
 
 def save_data(df, database_filename):
-    pass  
+    """"
+        Save the cleaned version of messages and categories pd.DataFrame as a table called messages into a
+        sqlite database.
+
+        parameters
+        -----------
+        df: pd.DataFrame
+        DataFrame containing the messages and categories files merged and cleaned:
+        database_filename: str
+        Database name using the following format 'sqlite:///<database name>.db'
+
+
+        returns
+        -------
+        None
+
+        """
+
+    engine = create_engine(database_filename)
+    df.to_sql('messages', engine, index=False)
 
 
 def main():
@@ -124,18 +140,18 @@ def main():
 
         print('Cleaning data...')
         df = clean_data(df)
-        
+
         print('Saving data...\n    DATABASE: {}'.format(database_filepath))
         save_data(df, database_filepath)
-        
+
         print('Cleaned data saved to database!')
-    
+
     else:
-        print('Please provide the filepaths of the messages and categories '\
-              'datasets as the first and second argument respectively, as '\
-              'well as the filepath of the database to save the cleaned data '\
-              'to as the third argument. \n\nExample: python process_data.py '\
-              'disaster_messages.csv disaster_categories.csv '\
+        print('Please provide the filepaths of the messages and categories ' \
+              'datasets as the first and second argument respectively, as ' \
+              'well as the filepath of the database to save the cleaned data ' \
+              'to as the third argument. \n\nExample: python process_data.py ' \
+              'disaster_messages.csv disaster_categories.csv ' \
               'DisasterResponse.db')
 
 
