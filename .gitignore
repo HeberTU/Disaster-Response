@@ -1,0 +1,4 @@
+# Testing suit, not ready yet
+test.py
+# cache stuff
+data/__pycache__/
