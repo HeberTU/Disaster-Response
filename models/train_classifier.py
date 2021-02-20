@@ -1,9 +1,50 @@
 import sys
+import nltk
+import time
+import re
+import pandas as pd
+import numpy as np
+
+from sqlalchemy import create_engine
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem.wordnet import WordNetLemmatizer
+
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+
+def load_data(database_filepath: str):
+    """"
+    load messages table from sqlite database and splits the table into:
+        X: message str, training feature
+        Y: target variables
+
+    parameters
+    -----------
+    database_filename: str
+        Database name using the following format 'sqlite:///<database name>.db'
 
 
-def load_data(database_filepath):
-    pass
+    returns
+    -------
+    X: pd.DataFrame
+    message str, training feature
+    Y: pd.DataFrame
+    target variables
 
+    """
+    engine = create_engine(database_filepath)
+    df = pd.read_sql_table("messages", engine)
+    X = df['message'].copy()
+    Y = df.drop(
+        labels=['id', 'message', 'original', 'genre'],
+        axis=1).copy()
+    return X, Y
 
 def tokenize(text):
     pass

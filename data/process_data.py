@@ -85,6 +85,9 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
         # convert column from string to numeric
         categories[column] = categories[column].astype(int)
 
+        # convert column to 0 or 1
+        categories[column] = categories[column].apply(lambda x: 0 if x == 0 else 1)
+
     # drop the original categories column from `df`
     df.drop(
         labels='categories',
@@ -108,25 +111,29 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
 def save_data(df, database_filename):
     """"
-        Save the cleaned version of messages and categories pd.DataFrame as a table called messages into a
-        sqlite database.
+    Save the cleaned version of messages and categories pd.DataFrame as a table called messages into a
+    sqlite database.
 
-        parameters
-        -----------
-        df: pd.DataFrame
+    parameters
+    -----------
+    df: pd.DataFrame
         DataFrame containing the messages and categories files merged and cleaned:
-        database_filename: str
+    database_filename: str
         Database name using the following format 'sqlite:///<database name>.db'
 
 
-        returns
-        -------
-        None
+    returns
+    -------
+    None
 
-        """
+    """
 
-    engine = create_engine(database_filename)
-    df.to_sql('messages', engine, index=False)
+    engine = create_engine('sqlite:///'+database_filename)
+    df.to_sql(
+        name='messages',
+        con=engine,
+        index=False,
+        if_exists='replace')
 
 
 def main():
