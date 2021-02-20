@@ -85,6 +85,9 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
         # convert column from string to numeric
         categories[column] = categories[column].astype(int)
 
+        # convert column to 0 or 1
+        categories[column] = categories[column].apply(lambda x: 0 if x == 0 else 1)
+
     # drop the original categories column from `df`
     df.drop(
         labels='categories',
