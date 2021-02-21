@@ -116,11 +116,21 @@ def build_model():
 
     """
 
+    # max_features, ngram_range, min_samples_split, and n_estimators parameters were chosen by running a grid
+    # search, fitting 5 folds for 144 candidates,i.e. 720 total fits. Since this is a time-consuming
+    # operation, I've decided to just pull out the parameters stored at the .best_estimator_ attribute.
     pipeline = Pipeline(
-        [('vect', CountVectorizer(tokenizer=tokenize)),
+        [('vect',
+          CountVectorizer(
+            max_features=5000,
+            ngram_range=(1, 2),
+            tokenizer=tokenize)),
          ('tfidf', TfidfTransformer()),
-         ('clf', MultiOutputClassifier(
-             RandomForestClassifier(),
+         ('clf',
+          MultiOutputClassifier(
+             RandomForestClassifier(
+                 min_samples_split=3,
+                 n_estimators=200),
              n_jobs=1))])
 
 
