@@ -12,9 +12,8 @@ from nltk.tokenize import word_tokenize
 from nltk.stem.wordnet import WordNetLemmatizer
 
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
@@ -40,7 +39,7 @@ def load_data(database_filepath: str):
     category_names: list
         list containing categories to be used
     """
-    engine = create_engine(database_filepath)
+    engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql_table("messages", engine)
     X = df['message'].copy()
     Y = df.drop(
@@ -77,8 +76,13 @@ def tokenize(text: str):
     for url in detected_urls:
         text = text.replace(url, "urlplaceholder")
 
-    # tokenize text
+    # lower case text
+    text = text.lower()
+
+    # Remove stop words and puntuation
     tokens = word_tokenize(text)
+    tokens = [re.sub(r"[^a-z0-9]", "", word) for word in tokens if word not in stopwords.words("english")]
+    tokens = [word for word in tokens if word != '']
 
     # initiate lemmatizer
     lemmatizer = WordNetLemmatizer()
@@ -86,10 +90,8 @@ def tokenize(text: str):
     # iterate through each token
     clean_tokens = []
     for tok in tokens:
-        # lemmatize, normalize case, and remove leading/trailing white space
+        tok = tok.strip()
         clean_tok = lemmatizer.lemmatize(lemmatizer.lemmatize(tok), pos='v')
-        clean_tok = clean_tok.lower()
-        clean_tok = clean_tok.strip()
         clean_tokens.append(clean_tok)
 
     return clean_tokens

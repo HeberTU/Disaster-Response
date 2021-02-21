@@ -2,3 +2,5 @@
 test.py
 # cache stuff
 data/__pycache__/
+# model file
+models/classifier.pkl
