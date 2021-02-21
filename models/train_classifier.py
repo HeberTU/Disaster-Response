@@ -1,6 +1,7 @@
 import sys
 import nltk
 import time
+import pickle
 import re
 import pandas as pd
 import numpy as np
@@ -36,7 +37,8 @@ def load_data(database_filepath: str):
     message str, training feature
     Y: pd.DataFrame
     target variables
-
+    category_names: list
+        list containing categories to be used
     """
     engine = create_engine(database_filepath)
     df = pd.read_sql_table("messages", engine)
@@ -44,7 +46,10 @@ def load_data(database_filepath: str):
     Y = df.drop(
         labels=['id', 'message', 'original', 'genre'],
         axis=1).copy()
-    return X, Y
+
+    category_names = Y.columns
+
+    return X, Y, category_names
 
 
 def tokenize(text: str):
@@ -92,7 +97,7 @@ def tokenize(text: str):
 
 def build_model():
     """"
-    Builds a GridSearchCV using a Pipeline formed by:
+    Builds a Pipeline using:
         + CountVectorizer:
             tokenize(text: str)
         + TfidfTransformer
@@ -105,10 +110,7 @@ def build_model():
 
     returns
     -------
-    cv: GridSearchCV
-        GridSearchCV object from by:
-            + Pipeline
-            + parameters dict
+    pipeline: Pipeline
 
     """
 
@@ -119,29 +121,64 @@ def build_model():
              RandomForestClassifier(),
              n_jobs=1))])
 
-    parameters = {
-        'vect__ngram_range': ((1, 1), (1, 2)),
-        'vect__max_df': (0.5, 0.75, 1.0),
-        'vect__max_features': (None, 5000, 10000),
-        'tfidf__norm': ('l1', 'l2'),
-        'tfidf__use_idf': (True, False),
-        'clf__estimator__criterion': ['gini', 'entropy'],
-        'clf__estimator__min_samples_split': [2, 3, 4],
-        'clf__estimator__n_estimators': [50, 100, 200],
 
-    }
-
-    cv = GridSearchCV(pipeline, parameters)
-
-    return cv
+    return pipeline
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    pass
+    """"
+    Uses classification_report function to show precision, recall, and f1-score across all the available categories
+
+    parameters
+    -----------
+    model: Pipeline
+    X_test: pd.Series
+    Series containing the test cases
+    Y_test: pd.DataFrame
+    DataFrame containing the correct categories.
+    category_names: list
+    list containing categories to be used
+
+
+
+    returns
+    -------
+    None
+
+    """
+
+    Y_pred = model.predict(X_test)
+
+    Y_pred = pd.DataFrame(
+            data=Y_pred,
+            columns=category_names,
+            index=Y_test.index)
+
+    for col in category_names:
+        print(col)
+        print(classification_report(
+            y_true=Y_test[col],
+            y_pred=Y_pred[col]))
+
+
 
 
 def save_model(model, model_filepath):
-    pass
+    """"
+    Saves the model as pickle file
+
+    parameters
+    -----------
+    model: Pipeline
+    model_filepath: model's file path
+
+
+    returns
+    -------
+    None
+
+    """
+    pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():
