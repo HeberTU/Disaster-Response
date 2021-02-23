@@ -104,7 +104,7 @@ def index():
             ],
 
             'layout': {
-                'title': 'Distribution of Message Genres',
+                'title': 'Distribution of Messages by Genres',
                 'yaxis': {
                     'title': "Count"
                 },
@@ -137,12 +137,13 @@ def index():
             ],
 
             'layout': {
-                'title': 'Distribution of Message by Category',
+                'title': 'Distribution of Messages by Category',
                 'yaxis': {
                     'title': "frequency"
                 },
                 'xaxis': {
-                    'title': "Category"
+                    'title': "Category",
+                    'tickangle': 35
                 },
                 'barmode' : 'stack'
             }
